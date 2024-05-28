@@ -1,0 +1,32 @@
+trigger:
+  branches:
+    include:
+    - master
+stages:
+- stage: __default
+  jobs:
+  - job: Job
+    pool:
+      vmImage: windows-latest
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          Invoke-WebRequest -OutFile ScaResolver-win64.zip -URI https://sca-downloads.s3.amazonaws.com/cli/1.9.10/ScaResolver-win64.zip
+          tar -xzvf ScaResolver-win64.zip
+    - task: Checkmarx AST@2
+      inputs:
+        CheckmarxService: 'ASTNEW'
+        projectName: '$(Build.Repository.Name)'
+        branchName: '$(Build.SourceBranchName)'
+        tenantName: 'workshop'
+        additionalParams: '--sca-resolver ./ScaResolver'
+    - task: CmdLine@2
+      displayName: 'Run a multi-line script'
+      inputs:
+        script: |
+          echo Add other tasks to build, test, and deploy your project.
+          echo See https://aka.ms/yaml
+
+#https://checkmarx.atlassian.net/wiki/spaces/CD/pages/1975713967/Installing+Supported+Package+Managers+for+Resolver#C%23-Support-in-Checkmarx-SCA

@@ -1,0 +1,36 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- script: echo Hello, world!
+  displayName: 'Run a one-line script'
+
+- script: |
+    wget https://sca-downloads.s3.amazonaws.com/cli/latest/ScaResolver-linux64.tar.gz
+    tar -xzvf ScaResolver-linux64.tar.gz
+    rm -rf ScaResolver-linux64.tar.gz 
+    sudo apt install maven npm
+  displayName: 'Run a multi-line script'
+
+- task: Checkmarx AST@2
+  inputs:
+    CheckmarxService: 'What your service Connection is named'
+    projectName: '$(Build.Repository.Name)'
+    branchName: '$(Build.SourceBranchName)'
+    tenantName: 'workshop'
+    additionalParams: '--sca-resolver ./ScaResolver'
+
+# see this documentation https://checkmarx.atlassian.net/wiki/spaces/CD/pages/1975713967/Installing+Supported+Package+Managers+for+Resolver#C%23-Support-in-Checkmarx-SCA
+
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
