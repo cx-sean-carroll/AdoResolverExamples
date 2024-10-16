@@ -1,0 +1,75 @@
+trigger:
+  branches:
+    include:
+      - master
+
+pool:
+  vmImage: 'windows-latest'  # Can be 'ubuntu-latest' for Linux
+
+stages:
+  - stage: __default
+    jobs:
+      - job: WindowsCheckmarxJob
+        displayName: 'Checkmarx Scan on Windows'
+        pool:
+          vmImage: 'windows-latest'
+        steps:
+          # Windows setup
+          - task: PowerShell@2
+            displayName: 'Download and Extract Checkmarx CLI (Windows)'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Invoke-WebRequest -OutFile CheckmarxCLI.zip -URI https://github.com/Checkmarx/ast-cli/releases/download/2.0.58/ast-cli_2.0.58_windows_x64.zip
+                Expand-Archive -Path CheckmarxCLI.zip -DestinationPath CxONE_CLI
+                Remove-Item CheckmarxCLI.zip
+
+          # Download SCA Resolver for Windows
+          - task: PowerShell@2
+            displayName: 'Download SCA Resolver (Windows)'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Invoke-WebRequest -OutFile ScaResolver-win64.zip -URI https://sca-downloads.s3.amazonaws.com/cli/1.9.10/ScaResolver-win64.zip
+                tar -xzvf ScaResolver-win64.zip
+
+          # Run Checkmarx CLI Scan for Windows
+          - task: PowerShell@2
+            displayName: 'Run Checkmarx CLI Scan (Windows)'
+            inputs:
+              targetType: 'inline'
+              script: |
+                CxONE_CLI\cx.exe scan create --project-name "$(Build.Repository.Name)" -s "$(Build.SourcesDirectory)" --branch "$(Build.SourceBranchName)" --sca-resolver ./ScaResolver --apikey <YOUR_API_KEY>
+
+      - job: UbuntuCheckmarxJob
+        displayName: 'Checkmarx Scan on Ubuntu'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          # Linux setup
+          - task: Bash@3
+            displayName: 'Download and Extract Checkmarx CLI (Ubuntu)'
+            inputs:
+              targetType: 'inline'
+              script: |
+                curl -LO https://github.com/Checkmarx/ast-cli/releases/download/2.0.58/ast-cli_2.0.58_linux_x64.tar.gz
+                mkdir CxONE_CLI
+                tar -xzf ast-cli_2.0.58_linux_x64.tar.gz -C CxONE_CLI
+                rm ast-cli_2.0.58_linux_x64.tar.gz
+
+          # Download SCA Resolver for Ubuntu
+          - task: Bash@3
+            displayName: 'Download SCA Resolver (Ubuntu)'
+            inputs:
+              targetType: 'inline'
+              script: |
+                curl -LO https://sca-downloads.s3.amazonaws.com/cli/1.9.10/ScaResolver-linux64.tar.gz
+                tar -xzvf ScaResolver-linux64.tar.gz
+
+          # Run Checkmarx CLI Scan for Ubuntu
+          - task: Bash@3
+            displayName: 'Run Checkmarx CLI Scan (Ubuntu)'
+            inputs:
+              targetType: 'inline'
+              script: |
+                ./CxONE_CLI/cx scan create --project-name "$(Build.Repository.Name)" -s "$(Build.SourcesDirectory)" --branch "$(Build.SourceBranchName)" --sca-resolver ./ScaResolver --apikey <YOUR_API_KEY>
