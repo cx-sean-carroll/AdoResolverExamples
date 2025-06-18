@@ -28,7 +28,7 @@ steps:
     tenantName: 'workshop'
     additionalParams: '--sca-resolver ./ScaResolver'
 
-# see this documentation https://checkmarx.atlassian.net/wiki/spaces/CD/pages/1975713967/Installing+Supported+Package+Managers+for+Resolver#C%23-Support-in-Checkmarx-SCA
+# see this documentation https://docs.checkmarx.com/en/34965-68725-using-sca-resolver-in-checkmarx-one-ci-cd-integrations.html
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
